@@ -17,8 +17,9 @@ void board_init(int board[][HORIZONTAL],int status[][HORIZONTAL]);
 void cre_board(int board[][HORIZONTAL]);
 void set_init(int board[][HORIZONTAL],int status[][HORIZONTAL],int *p_xpos,int *p_ypos,int r_xpos[ROBOTS],int r_ypos[ROBOTS]);
 void player_move(int board[][HORIZONTAL],int status[][HORIZONTAL],int *p_xpos,int *p_ypos);
-void robots_move(int board[][HORIZONTAL],int status[][HORIZONTAL],int *p_xpos,int *p_ypos,int r_xpos[ROBOTS],int r_ypos[ROBOTS]);
+void robots_move(int board[][HORIZONTAL],int status[][HORIZONTAL],int *p_xpos,int *p_ypos,int r_xpos[ROBOTS],int r_ypos[ROBOTS],int *flag);
 void scrap(int board[][HORIZONTAL],int status[][HORIZONTAL],int r_xpos[ROBOTS],int r_ypos[ROBOTS]);
+void game_over(int board[][HORIZONTAL],int status[][HORIZONTAL],int r_xpos[ROBOTS],int r_ypos[ROBOTS],int *flag);
 
 int main(void)
 {
@@ -26,14 +27,16 @@ int main(void)
   int status[VERTICAL][HORIZONTAL];
   int p_xpos,p_ypos;
   int r_xpos[ROBOTS],r_ypos[ROBOTS];
+  int flag = 1;
   
   board_init(board,status);
   set_init(board,status,&p_xpos,&p_ypos,r_xpos,r_ypos);
   cre_board(board);
-  while(1){
+  while(flag == 1){
     player_move(board,status,&p_xpos,&p_ypos);
-    robots_move(board,status,&p_xpos,&p_ypos,r_xpos,r_ypos);
+    robots_move(board,status,&p_xpos,&p_ypos,r_xpos,r_ypos,&flag);
     scrap(board,status,r_xpos,r_ypos);
+    if(flag == 0) game_over(board,status,r_xpos,r_ypos,&flag);
     cre_board(board);
   }
 }
@@ -168,10 +171,10 @@ void player_move(int board[][HORIZONTAL],int status[][HORIZONTAL],int *p_xpos,in
     board[p_y][p_x] = '@';
   }
 }
-void robots_move(int board[][HORIZONTAL],int status[][HORIZONTAL],int *p_xpos,int *p_ypos,int r_xpos[ROBOTS],int r_ypos[ROBOTS])
+void robots_move(int board[][HORIZONTAL],int status[][HORIZONTAL],int *p_xpos,int *p_ypos,int r_xpos[ROBOTS],int r_ypos[ROBOTS],int *flag)
 {
   int i;
-  
+
   for(i=0;i<ROBOTS;i++){
     if(status[r_ypos[i]][r_xpos[i]] == ROBOT){
       board[r_ypos[i]][r_xpos[i]] = ' ';
@@ -180,6 +183,7 @@ void robots_move(int board[][HORIZONTAL],int status[][HORIZONTAL],int *p_xpos,in
       if(r_xpos[i] > *p_xpos) r_xpos[i] -= 1;
       if(r_ypos[i] < *p_ypos) r_ypos[i] += 1;
       if(r_ypos[i] > *p_ypos) r_ypos[i] -= 1;
+      if(status[r_ypos[i]][r_xpos[i]] == PLAYER) *flag = 0;
       board[r_ypos[i]][r_xpos[i]] = '+';
       status[r_ypos[i]][r_xpos[i]] = ROBOT;
     }
@@ -191,11 +195,15 @@ void scrap(int board[][HORIZONTAL],int status[][HORIZONTAL],int r_xpos[ROBOTS],i
   
   for(i=0;i<ROBOTS;i++){
     for(j=i+1;j<ROBOTS;j++){
-      if(r_ypos[i] == r_ypos[j] && r_xpos[i] == r_xpos[j]){
+      if(r_xpos[i] == r_xpos[j] && r_ypos[i] == r_ypos[j]){
 	board[r_ypos[i]][r_xpos[i]] = '*';
 	status[r_ypos[i]][r_xpos[i]] = SCRAP;
+	status[r_ypos[j]][r_xpos[j]] = SCRAP;
       }
     }
   }
 }
-
+void game_over(int board[][HORIZONTAL],int status[][HORIZONTAL],int r_xpos[ROBOTS],int r_ypos[ROBOTS],int *flag)
+{ 
+  printf("GAME OVER\n");
+}
